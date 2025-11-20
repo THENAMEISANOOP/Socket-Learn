@@ -1,17 +1,20 @@
-// socket.js
 const setupSocket = (io) => {
   io.on("connection", (socket) => {
     console.log("User connected:", socket.id);
 
-    // Listen for messages from clients
-    socket.on("sendMessage", (data) => {
-      // Broadcast the message to all connected clients
-      io.emit("receiveMessage", data);
+    // Join private chat room
+    socket.on("joinRoom", ({ roomId }) => {
+      socket.join(roomId);
+      console.log(`User ${socket.id} joined room ${roomId}`);
     });
 
-    // Optional: handle typing indicator
-    socket.on("typing", (username) => {
-      socket.broadcast.emit("typing", username); // notify everyone else
+    // Send private message only inside this room
+    socket.on("sendPrivateMessage", (data) => {
+      const { roomId, message } = data;
+
+      io.to(roomId).emit("receivePrivateMessage", {
+        message,
+      });
     });
 
     socket.on("disconnect", () => {
